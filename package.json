@@ -1,0 +1,8 @@
+{
+  "name": "quiz-app-vercel",
+  "version": "1.0.0",
+  "main": "index.js",
+  "dependencies": {
+    "mammoth": "^1.6.0"
+  }
+}

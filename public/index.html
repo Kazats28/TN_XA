@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <title>Trắc nghiệm HTPT</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans">
+  <div class="max-w-3xl mx-auto p-4">
+    <h1 class="text-3xl font-bold text-center mb-6">📝 Trắc nghiệm Hệ Thống Phân Tán</h1>
+    <div class="text-center mb-4">
+      <button onclick="startQuiz()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">Bắt đầu làm bài</button>
+    </div>
+    <div id="quizContainer" class="space-y-6"></div>
+  </div>
+
+  <script>
+    let questions = [];
+    let currentIndex = 0;
+    let userAnswers = [];
+
+    async function startQuiz() {
+      const res = await fetch("/api/quiz");
+      const data = await res.json();
+      questions = data.questions;
+      currentIndex = 0;
+      userAnswers = [];
+      renderQuestion();
+    }
+
+    function renderQuestion() {
+      const container = document.getElementById("quizContainer");
+      container.innerHTML = "";
+      const q = questions[currentIndex];
+      const isMultiple = Array.isArray(q.answer) && q.answer.length > 1;
+      const inputType = isMultiple ? "checkbox" : "radio";
+
+      const div = document.createElement("div");
+      div.className = "bg-white p-6 rounded shadow animate-fadeIn";
+
+      div.innerHTML = `<h3 class="text-xl font-semibold mb-4">${q.question}</h3>`;
+      q.choices.forEach(choice => {
+        div.innerHTML += `
+          <label class="block mb-2">
+            <input type="${inputType}" name="choice" value="${choice}" class="mr-2"> ${choice}
+          </label>`;
+      });
+
+      div.innerHTML += `
+        <div class="mt-4 space-x-2">
+          <button onclick="submitAnswer(${isMultiple})" class="bg-green-600 text-white px-4 py-1 rounded hover:bg-green-700">Nộp đáp án</button>
+          <button onclick="nextQuestion()" class="bg-gray-500 text-white px-4 py-1 rounded hover:bg-gray-600">Tiếp theo</button>
+        </div>
+        <div id="feedback" class="mt-4"></div>`;
+
+      container.appendChild(div);
+    }
+
+    function submitAnswer(isMultiple) {
+      let selected = [];
+      if (isMultiple) {
+        selected = Array.from(document.querySelectorAll('input[name="choice"]:checked')).map(i => i.value);
+      } else {
+        const sel = document.querySelector('input[name="choice"]:checked');
+        if (sel) selected = [sel.value];
+      }
+
+      if (selected.length === 0) {
+        alert("Hãy chọn ít nhất một đáp án.");
+        return;
+      }
+
+      const q = questions[currentIndex];
+      userAnswers[currentIndex] = selected;
+      const feedback = document.getElementById("feedback");
+
+      const correct = Array.isArray(q.answer) ? q.answer : [q.answer];
+
+      const correctText = correct.map(ans => `<div class='text-green-600'>✅ ${ans}</div>`).join("");
+      const userText = selected.map(sel => {
+        if (correct.includes(sel)) {
+          return `<div class='text-green-600'>${sel}</div>`;
+        } else {
+          return `<div class='text-red-600'>${sel}</div>`;
+        }
+      }).join("");
+
+      feedback.innerHTML = `<div class='mt-2'>${correctText}<div class='mt-1'>🧍 Bạn chọn: ${userText}</div></div>`;
+
+      document.querySelectorAll('input[name="choice"]').forEach(input => input.disabled = true);
+    }
+
+    function nextQuestion() {
+      currentIndex++;
+      if (currentIndex < questions.length) {
+        renderQuestion();
+      } else {
+        showFinalScore();
+      }
+    }
+
+    function showFinalScore() {
+      let correctCount = 0;
+      const container = document.getElementById("quizContainer");
+      let html = "<h2 class='text-2xl font-bold mb-4'>🎉 Kết quả:</h2>";
+
+      questions.forEach((q, i) => {
+        const correct = Array.isArray(q.answer) ? q.answer : [q.answer];
+        const user = userAnswers[i] || [];
+        const userSet = new Set(user);
+        const correctSet = new Set(correct);
+
+        const isCorrect = userSet.size === correctSet.size && [...userSet].every(x => correctSet.has(x));
+        if (isCorrect) correctCount++;
+        else {
+          html += `<div class="mb-2"><div class="text-red-600 font-semibold">${q.question}</div>
+                   <div>Đáp án đúng: ${correct.join(", ")}</div>
+                   <div>Bạn chọn: ${user.join(", ") || "(Không chọn)"}</div></div>`;
+        }
+      });
+
+      html = `<div class="bg-white p-6 rounded shadow"><h2 class="text-xl mb-2 text-green-700">✅ Điểm: ${correctCount}/${questions.length}</h2>` + html + "</div>";
+      container.innerHTML = html;
+    }
+  </script>
+</body>
+</html>
