@@ -1,18 +1,9 @@
 <!DOCTYPE html>
-<html lang="vi" class="transition-colors duration-500">
+<html lang="vi" class="dark transition-colors duration-500">
 <head>
   <meta charset="UTF-8" />
   <title>Trắc nghiệm HTPT</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <!-- Cấu hình Tailwind cho dark mode -->
-  <script>
-    tailwind.config = {
-      darkMode: 'class'
-    }
-  </script>
-  <script src="https://cdn.tailwindcss.com"></script>
-
   <style>
     @keyframes spin {
       to { transform: rotate(360deg); }
@@ -21,24 +12,19 @@
       display: inline-block;
       width: 24px;
       height: 24px;
-      border: 3px solid rgba(0,0,0,0.2);
-      border-top-color: rgba(0,0,0,0.6);
+      border: 3px solid rgba(255,255,255,0.2);
+      border-top-color: rgba(255,255,255,0.6);
       border-radius: 50%;
       animation: spin 0.6s linear infinite;
     }
   </style>
 </head>
-<body class="bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-white transition-colors duration-500">
+<body class="bg-gray-900 text-white transition-colors duration-500">
   <!-- ✅ TOPBAR -->
-  <header class="w-full bg-white dark:bg-gray-800 shadow mb-6">
+  <header class="w-full bg-gray-800 shadow mb-6">
     <div class="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
       <h1 class="text-xl font-bold">📘 Trắc nghiệm HTPT</h1>
-      <div class="flex items-center gap-4">
-        <span id="progressText" class="text-sm text-gray-600 dark:text-gray-300">Đã làm: 0</span>
-        <button onclick="toggleDarkMode()" class="bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-white px-3 py-1 rounded hover:bg-gray-300 dark:hover:bg-gray-500 transition">
-          🌓 Giao diện
-        </button>
-      </div>
+      <span id="progressText" class="text-sm text-gray-300">Đã làm: 0</span>
     </div>
   </header>
 
@@ -56,19 +42,6 @@
     let questions = [];
     let currentIndex = 0;
     let userAnswers = [];
-
-    function toggleDarkMode() {
-      const html = document.documentElement;
-      html.classList.toggle('dark');
-      localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
-    }
-
-    (function () {
-      const savedTheme = localStorage.getItem('theme');
-      if (savedTheme === 'dark') {
-        document.documentElement.classList.add('dark');
-      }
-    })();
 
     function showLoader(show) {
       document.getElementById("loader").classList.toggle("hidden", !show);
@@ -100,7 +73,7 @@
       const inputType = isMultiple ? "checkbox" : "radio";
 
       const div = document.createElement("div");
-      div.className = "bg-white dark:bg-gray-800 p-6 rounded shadow animate-fadeIn";
+      div.className = "bg-gray-800 p-6 rounded shadow animate-fadeIn";
 
       div.innerHTML = `<h3 class="text-xl font-semibold mb-4">${q.question}</h3>`;
       q.choices.forEach(choice => {
@@ -118,7 +91,6 @@
         <div id="feedback" class="mt-4"></div>`;
 
       container.appendChild(div);
-
       document.getElementById("progressText").textContent = `Đã làm: ${currentIndex}/${questions.length}`;
     }
 
@@ -142,21 +114,24 @@
 
       const correct = Array.isArray(q.answer) ? q.answer : [q.answer];
 
-      const correctText = correct.map(ans => `<div class='text-green-600'>✅ ${ans}</div>`).join("");
+      const correctText = correct.map(ans => `<div class='text-green-400'>✅ ${ans}</div>`).join("");
       const userText = selected.map(sel => {
         if (correct.includes(sel)) {
-          return `<div class='text-green-600'>${sel}</div>`;
+          return `<div class='text-green-400'>${sel}</div>`;
         } else {
-          return `<div class='text-red-600'>${sel}</div>`;
+          return `<div class='text-red-400'>${sel}</div>`;
         }
       }).join("");
 
       feedback.innerHTML = `<div class='mt-2'>${correctText}<div class='mt-1'>🧍 Bạn chọn: ${userText}</div></div>`;
-
       document.querySelectorAll('input[name="choice"]').forEach(input => input.disabled = true);
     }
 
     function nextQuestion() {
+      if (userAnswers[currentIndex] === 0) {
+        alert("Bạn chưa hoàn thành câu hiện tại.");
+        return;
+      }
       currentIndex++;
       if (currentIndex < questions.length) {
         renderQuestion();
@@ -179,13 +154,13 @@
         const isCorrect = userSet.size === correctSet.size && [...userSet].every(x => correctSet.has(x));
         if (isCorrect) correctCount++;
         else {
-          html += `<div class="mb-2"><div class="text-red-600 font-semibold">${q.question}</div>
+          html += `<div class="mb-2"><div class="text-red-400 font-semibold">${q.question}</div>
                    <div>Đáp án đúng: ${correct.join(", ")}</div>
                    <div>Bạn chọn: ${user.join(", ") || "(Không chọn)"}</div></div>`;
         }
       });
 
-      html = `<div class="bg-white dark:bg-gray-800 p-6 rounded shadow"><h2 class="text-xl mb-2 text-green-400">✅ Điểm: ${correctCount}/${questions.length}</h2>` + html + "</div>";
+      html = `<div class="bg-gray-800 p-6 rounded shadow"><h2 class="text-xl mb-2 text-green-400">✅ Điểm: ${correctCount}/${questions.length}</h2>` + html + "</div>";
       container.innerHTML = html;
       document.getElementById("progressText").textContent = `Hoàn thành 🎉`;
     }
