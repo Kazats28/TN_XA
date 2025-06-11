@@ -154,7 +154,7 @@
     }
 
     function nextQuestion() {
-      if (userAnswers[currentIndex] === 0) {
+      if (!userAnswers[currentIndex]) {
         alert("Bạn chưa hoàn thành câu hiện tại.");
         return;
       }
